@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const table = require('../models/tableModel');
 const user = require('../models/userModel');
 
 module.exports.verifyUser = function(req, res, next) {
@@ -89,6 +90,32 @@ module.exports.verifyProfile = function(req, res, next) {
             user.findOne({_id: udata.userId}).then(function(userData) {
                 if (userData.username === req.params.username) {
                     req.userInfo = userData;
+                    next();
+                } else {
+                    res.json({message: "Method not allowed"})
+                }
+            })
+            .catch(function(e) {
+                res.json({error: e})
+            })
+        } else {
+            res.json({error: "Authentication details not provided"})
+        }
+    }
+    catch(e) {
+        res.json({error: e})
+    }
+}
+
+module.exports.verifyTable = function(req, res, next) {
+    try {
+        const authorization_val = req.headers.authorization
+        if (authorization_val !== undefined) {
+            const token = req.headers.authorization.split(" ")[1];
+            const udata = jwt.verify(token, "restrobooking");
+            table.findOne({_id: req.params.tableId}).then(function(tableData) {
+                if (tableData.tableOf.toString() === udata.userId) {
+                    req.tableInfo = tableData;
                     next();
                 } else {
                     res.json({message: "Method not allowed"})

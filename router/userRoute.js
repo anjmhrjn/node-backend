@@ -57,8 +57,8 @@ router.post("/user/login", function(req, res) {
     })
 })
 
-router.put("/profile/update/:username", auth.verifyUser, auth.verifyProfile, upload.single('user_image'), function(req, res) {
-    const udata = req.body;
+router.put("/profile/update/:username", auth.verifyProfile, upload.single('user_image'), function(req, res) {
+    let udata = req.body;
     if (req.file !== undefined) {
         udata["user_image"] = req.file.filename;
     }
