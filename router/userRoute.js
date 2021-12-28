@@ -4,6 +4,9 @@ const router = new express.Router();
 const jwt = require("jsonwebtoken");
 const user = require("../models/userModel");
 
+const auth = require("../auth/auth");
+const upload = require("../uploads/file");
+
 router.post("/user/register", function(req, res) {
     const username = req.body.username;
 
@@ -51,6 +54,26 @@ router.post("/user/login", function(req, res) {
                 res.json({token: token, message: "Logging you in!"})
             })
         }
+    })
+})
+
+router.put("/profile/update/:username", auth.verifyUser, auth.verifyProfile, upload.single('user_image'), function(req, res) {
+    const udata = req.body;
+    if (req.file !== undefined) {
+        udata["user_image"] = req.file.filename;
+    }
+
+    const primary_fields = ["_id", "username", "user_type"]
+    primary_fields.forEach(function(value) {
+        delete udata[value];
+    })
+
+    const username = req.params.username
+    user.updateOne({username: username}, udata)
+    .then(function() {
+        res.json({message: "Profile Updated"});
+    }).catch(function() {
+        res.json({message: "Error in updating profile"});
     })
 })
 
