@@ -1,15 +1,3 @@
-// const express = require('express');
-// const router = new express.Router();
-// const auth = require("../auth/auth");
-// const table = require("../models/tableModel");
-
-// router.post("/table/add", function(req, res) {
-//     console.log(req.body)
-//     res.json({})
-// })
-
-// module.exports = router;
-
 const express = require('express');
 const router = new express.Router();
 const table = require("../models/tableModel");

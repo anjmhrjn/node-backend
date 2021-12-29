@@ -12,4 +12,10 @@ app.use(userRoute);
 const tableRoute = require("./router/tableRoute");
 app.use(tableRoute);
 
+const categoryRoute = require("./router/categoryRoute");
+app.use(categoryRoute);
+
+const itemRoute = require("./router/itemRoute");
+app.use(itemRoute);
+
 app.listen("80");
