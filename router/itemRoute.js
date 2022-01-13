@@ -73,5 +73,18 @@ router.put("/item/:itemId/add-item-category/", auth.verifyItem, function(req, re
     })
 })
 
+router.put("/item/:itemId/remove-image/", auth.verifyItem, function(req, res) {
+    let idata = req.body
+    const itemId = req.params.itemId;
+    const image = idata["image"];
+
+    item.updateOne({_id: itemId}, {$pull : {images: image}})
+    .then(function() {
+        res.json({message: "Image Updated"});
+    }).catch(function() {
+        res.json({message: "Error in removing image"});
+    })
+})
+
 module.exports = router;
 
