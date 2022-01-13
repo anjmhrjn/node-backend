@@ -38,4 +38,14 @@ router.delete("/category/delete", auth.verifyAdmin, function(req, res) {
     })
 })
 
+router.get("/all-categories/", function(req, res) { 
+    categories.find()
+    .then(function(result) {
+        res.json(result)
+    })
+    .catch(function() {
+        res.json({message: "something went wrong"})
+    })
+})
+
 module.exports = router

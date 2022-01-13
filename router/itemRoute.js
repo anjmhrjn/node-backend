@@ -98,5 +98,37 @@ router.put("/item/:itemId/add-item-image/", auth.verifyItem, upload.single('imag
     })
 })
 
+router.get("/my-items/", auth.verifyBusiness, function(req, res) {
+    const userId = req.userInfo._id;    
+    item.find({itemOf: userId})
+    .then(function(result) {
+        res.json(result)
+    })
+    .catch(function() {
+        res.json({message: "something went wrong"})
+    })
+})
+
+router.get("/all-items/", function(req, res) { 
+    item.find()
+    .then(function(result) {
+        res.json(result)
+    })
+    .catch(function() {
+        res.json({message: "something went wrong"})
+    })
+})
+
+router.get("/users-items/:userId", function(req, res) { 
+    const userId = req.params.userId
+    item.find({itemOf: userId})
+    .then(function(result) {
+        res.json(result)
+    })
+    .catch(function() {
+        res.json({message: "something went wrong"})
+    })
+})
+
 module.exports = router;
 
