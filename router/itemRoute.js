@@ -80,9 +80,21 @@ router.put("/item/:itemId/remove-image/", auth.verifyItem, function(req, res) {
 
     item.updateOne({_id: itemId}, {$pull : {images: image}})
     .then(function() {
-        res.json({message: "Image Updated"});
+        res.json({message: "Image Removed"});
     }).catch(function() {
         res.json({message: "Error in removing image"});
+    })
+})
+
+router.put("/item/:itemId/add-item-image/", auth.verifyItem, upload.single('image'), function(req, res) {
+
+    const itemId = req.params.itemId;
+
+    item.updateOne({_id: itemId}, {$push : {images: req.file.filename}})
+    .then(function() {
+        res.json({message: "Image Added"});
+    }).catch(function() {
+        res.json({message: "Error in adding image"});
     })
 })
 
