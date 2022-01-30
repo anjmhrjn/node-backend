@@ -13,6 +13,7 @@ router.post("/user/register", function(req, res) {
     user.findOne({username: username})
     .then(function(userData) {
         if (userData !== null) {
+            res.status(400);
             res.json({message: "User already exists!"})
             return;
         }
@@ -29,9 +30,10 @@ router.post("/user/register", function(req, res) {
             })
             data.save()
             .then(function() {
-                res.json({message: "User registered successfully!"});
+                res.json({message: "User registered successfully!", success: true});
             })
             .catch(function(e) {
+                res.status(400);
                 res.json(e);
             })
         })
@@ -43,15 +45,29 @@ router.post("/user/login", function(req, res) {
     user.findOne({username: username})
     .then(function(userData) {
         if (userData === null) {
+            res.status(400);
             return res.json({message: "Invalid login credentials!"})
         } else {
             const password = req.body.password;
             bcryptjs.compare(password, userData.password, function(e, result) {
                 if (!result) {
+                    res.status(400);
                     return res.json({message: "Invalid username or password!"});
                 }
                 const token = jwt.sign({userId: userData._id}, "restrobooking");
-                res.json({token: token, message: "Logging you in!"})
+                const userDetails = {
+                    userId: userData._id,
+                    username: userData.username,
+                    email: userData.email,
+                    user_type: userData.user_type,
+                    token: token
+                }
+                res.json({
+                    token: token, 
+                    message: "Logging you in!", 
+                    success: true, 
+                    userdetails: userDetails
+                })
             })
         }
     })
@@ -71,8 +87,9 @@ router.put("/profile/update/:username", auth.verifyProfile, upload.single('user_
     const username = req.params.username
     user.updateOne({username: username}, udata)
     .then(function() {
-        res.json({message: "Profile Updated"});
+        res.json({message: "Profile Updated", success: true});
     }).catch(function() {
+        res.status(400);
         res.json({message: "Error in updating profile"});
     })
 })

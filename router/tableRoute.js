@@ -13,9 +13,10 @@ router.post("/table/add", auth.verifyBusiness, function(req, res) {
     })
     data.save()
     .then(function() {
-        res.json({message: "Table added successfully!"});
+        res.json({message: "Table added successfully!", success: true});
     })
     .catch(function(e) {
+        res.status(400);
         res.json(e);
     })
     
@@ -32,8 +33,9 @@ router.put("/table/update/:tableId", auth.verifyTable, function(req, res) {
 
     table.updateOne({_id: tableId}, tdata)
     .then(function() {
-        res.json({message: "Table Updated"});
+        res.json({message: "Table Updated", success: true});
     }).catch(function() {
+        res.status(400);
         res.json({message: "Error in updating table"});
     })
 })
@@ -43,9 +45,22 @@ router.delete("/table/delete/:tableId", auth.verifyTable, function(req, res) {
 
     table.deleteOne({_id: tableId})
     .then(function() {
-        res.json({message: "Table Deleted"});
+        res.json({message: "Table Deleted", success: true});
     }).catch(function() {
+        res.status(400);
         res.json({message: "Error in deleting table"});
+    })
+})
+
+router.get("/table/user/:id", auth.verifyBusiness, function(req, res) {
+    const tableOf = req.params.id;
+    table.find({tableOf: tableOf})
+    .then(function(result) {
+        res.json(result)
+    })
+    .catch(function() {
+        res.status(400)
+        res.json({message: "something went wrong"})
     })
 })
 
