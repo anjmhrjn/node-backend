@@ -14,7 +14,7 @@ const item = mongoose.model("Item", {
         type: Number
     },
     images: {
-        type: [String]
+        type: String
     },
     description: {
         type: String 

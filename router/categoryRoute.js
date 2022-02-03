@@ -4,13 +4,13 @@ const categories = require("../models/categoryModel");
 
 const auth = require("../auth/auth");
 
-router.post("/category/add", auth.verifyAdmin, function(req, res) {
+router.post("/category/add", auth.verifyBusinessAdmin, function(req, res) {
     const data = new categories({
         name: req.body.name
     })
     data.save()
-    .then(function() {
-        res.json({message: "Category added successfully!"});
+    .then(function(result) {
+        res.json({message: "Category added successfully!", data: result});
     })
     .catch(function(e) {
         res.json(e);
