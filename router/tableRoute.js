@@ -36,7 +36,7 @@ router.put("/table/update/:tableId", auth.verifyTable, function(req, res) {
         res.json({message: "Table Updated", success: true});
     }).catch(function() {
         res.status(400);
-        res.json({message: "Error in updating table"});
+        res.json({error: "Error in updating table"});
     })
 })
 
@@ -55,6 +55,18 @@ router.delete("/table/delete/:tableId", auth.verifyTable, function(req, res) {
 router.get("/table/user/:id", auth.verifyBusiness, function(req, res) {
     const tableOf = req.params.id;
     table.find({tableOf: tableOf})
+    .then(function(result) {
+        res.json(result)
+    })
+    .catch(function() {
+        res.status(400)
+        res.json({message: "something went wrong"})
+    })
+})
+
+router.get("/table/:id", auth.verifyBusiness, function(req, res) {
+    const table_id = req.params.id;
+    table.findOne({_id: table_id})
     .then(function(result) {
         res.json(result)
     })
