@@ -242,3 +242,36 @@ module.exports.verifyBooking = function(req, res, next) {
         res.json({error: e})
     }
 }
+
+module.exports.verifyBusinessBooking = function(req, res, next) {
+    try {
+        const authorization_val = req.headers.authorization
+        if (authorization_val !== undefined) {
+            const token = req.headers.authorization.split(" ")[1];
+            const udata = jwt.verify(token, "restrobooking");
+            booking.findOne({_id: req.params.bid}).then(function(bookingData) {
+                const tableId = bookingData.table
+                table.findOne({_id:tableId}).then(function(tableData) {
+                    if (tableData.tableOf.toString() === udata.userId) {
+                        req.bookingInfo = bookingData;
+                        next();
+                    } else {
+                        res.json({message: "Method not allowed"})
+                    }
+                })
+                .catch(function(e) {
+                    res.json({error: e})
+                })
+                
+            })
+            .catch(function(e) {
+                res.json({error: e})
+            })
+        } else {
+            res.json({error: "Authentication details not provided"})
+        }
+    }
+    catch(e) {
+        res.json({error: e})
+    }
+}

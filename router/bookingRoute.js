@@ -156,6 +156,9 @@ router.get("/booking/:bid", auth.verifyBooking, function(req, res) {
                 foreignField: "_id",
                 as: "table_detail"
             }
+        },
+        {
+            $unwind: "$table_detail"
         }
     ])
     .then(function(result) {
@@ -180,6 +183,9 @@ router.get("/my-bookings", auth.verifyCustomer, function(req, res) {
                 foreignField: "_id",
                 as: "table_detail"
             }
+        },
+        {
+            $unwind: "$table_detail"
         }
     ])
     .then(function(result) {
@@ -205,6 +211,37 @@ router.get("/filter-booking/:status", auth.verifyCustomer, function(req, res) {
                 foreignField: "_id",
                 as: "table_detail"
             }
+        },
+        {
+            $unwind: "$table_detail"
+        }
+        
+    ])
+    .then(function(result) {
+        res.json(result)
+    })
+    .catch(function() {
+        res.json({message: "something went wrong"})
+    })
+})
+
+router.get("/business/my-booking", auth.verifyBusiness, function(req, res) { 
+    const businessId = mongoose.Types.ObjectId(req.userInfo._id)
+    booking.aggregate([
+        {
+            $lookup: {
+                from: "tables",
+                localField: "table",
+                foreignField: "_id",
+                as: "table_detail"
+            }
+        },
+        {
+            $unwind: "$table_detail"
+        },
+        {
+            $match: {"table_detail.tableOf": businessId}
+            
         }
     ])
     .then(function(result) {
@@ -213,6 +250,16 @@ router.get("/filter-booking/:status", auth.verifyCustomer, function(req, res) {
     .catch(function() {
         res.json({message: "something went wrong"})
     })
+})
+
+router.put("/booking/update-status/:bid", auth.verifyBusinessBooking, function(req, res) {
+    const bookingId = req.params.bid
+    booking.updateOne({_id: bookingId}, {booking_status: req.body.booking_status})
+    .then(function(result) {
+        res.json({message: "Status Updated", success: true, data:result});
+    }).catch(function() {
+        res.json({message: "Error in updating category", success: false});
+    })    
 })
 
 module.exports = router
