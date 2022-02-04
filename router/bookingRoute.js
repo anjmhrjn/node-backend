@@ -166,4 +166,28 @@ router.get("/booking/:bid", auth.verifyBooking, function(req, res) {
     })
 })
 
+router.get("/my-bookings", auth.verifyCustomer, function(req, res) { 
+    const user = mongoose.Types.ObjectId(req.userInfo._id)
+    booking.aggregate([
+        {
+            $match: {user: user}
+        },
+        {
+           $lookup:
+            {
+                from: "tables",
+                localField: "table",
+                foreignField: "_id",
+                as: "table_detail"
+            }
+        }
+    ])
+    .then(function(result) {
+        res.json(result)
+    })
+    .catch(function() {
+        res.json({message: "something went wrong"})
+    })
+})
+
 module.exports = router
