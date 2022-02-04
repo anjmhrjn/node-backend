@@ -129,4 +129,16 @@ router.put("/update/booking/:bid", auth.verifyBooking, function(req, res) {
     })
 })
 
+router.delete("/booking/delete/:bid", auth.verifyBooking, function(req, res) {
+    const bookingId = req.params.bid;
+
+    booking.deleteOne({_id: bookingId})
+    .then(function() {
+        res.json({message: "Booking Deleted", success: true});
+    }).catch(function() {
+        res.status(400);
+        res.json({message: "Error in deleting table"});
+    })
+})
+
 module.exports = router
