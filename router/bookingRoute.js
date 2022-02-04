@@ -190,4 +190,29 @@ router.get("/my-bookings", auth.verifyCustomer, function(req, res) {
     })
 })
 
+router.get("/filter-booking/:status", auth.verifyCustomer, function(req, res) { 
+    const user = mongoose.Types.ObjectId(req.userInfo._id)
+    const status = req.params.status
+    booking.aggregate([
+        {
+            $match: {user: user, booking_status: status}
+        },
+        {
+           $lookup:
+            {
+                from: "tables",
+                localField: "table",
+                foreignField: "_id",
+                as: "table_detail"
+            }
+        }
+    ])
+    .then(function(result) {
+        res.json(result)
+    })
+    .catch(function() {
+        res.json({message: "something went wrong"})
+    })
+})
+
 module.exports = router
