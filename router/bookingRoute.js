@@ -1,6 +1,7 @@
 const express = require('express');
 const router = new express.Router();
 const categories = require("../models/categoryModel");
+const mongoose = require('mongoose');
 
 const auth = require("../auth/auth");
 const booking = require('../models/bookingModel');
@@ -138,6 +139,30 @@ router.delete("/booking/delete/:bid", auth.verifyBooking, function(req, res) {
     }).catch(function() {
         res.status(400);
         res.json({message: "Error in deleting table"});
+    })
+})
+
+router.get("/booking/:bid", auth.verifyBooking, function(req, res) { 
+    const bookingId = mongoose.Types.ObjectId(req.params.bid)
+    booking.aggregate([
+        {
+            $match: {_id: bookingId}
+        },
+        {
+           $lookup:
+            {
+                from: "tables",
+                localField: "table",
+                foreignField: "_id",
+                as: "table_detail"
+            }
+        }
+    ])
+    .then(function(result) {
+        res.json(result[0])
+    })
+    .catch(function() {
+        res.json({message: "something went wrong"})
     })
 })
 
