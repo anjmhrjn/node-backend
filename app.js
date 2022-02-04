@@ -21,4 +21,7 @@ app.use(categoryRoute);
 const itemRoute = require("./router/itemRoute");
 app.use(itemRoute);
 
+const bookingRoute = require("./router/bookingRoute");
+app.use(bookingRoute);
+
 app.listen("80");

@@ -30,7 +30,6 @@ router.post("/item/add", auth.verifyBusiness, upload.single('images'), function(
 router.put("/item/update/:itemId", auth.verifyItem, function(req, res) {
     let idata = req.body
     const itemId = req.params.itemId;
-    console.log(idata)
 
     const primary_fields = ["_id", "itemOf", "images"]
     primary_fields.forEach(function(value) {
