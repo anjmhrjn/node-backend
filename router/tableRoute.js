@@ -22,6 +22,32 @@ router.post("/table/add", auth.verifyBusiness, function(req, res) {
     
 })
 
+router.post("/table/bulk/add", auth.verifyBusiness, function(req, res) {
+    const table_number = req.body.table_number
+    const table_list = table_number.split(",")
+    table_list.forEach((num, index) => {
+        let data = new table({
+            min_capacity: req.body.min_capacity,
+            max_capacity: req.body.max_capacity,
+            table_number: num,
+            tableOf: req.body.tableOf
+        })
+        data.save()
+        .then(function() {
+            if (index == table_list.length - 1) {
+                res.json({message: "Tables added successfully!", success: true});
+            }
+        })
+        .catch(function(e) {
+            res.status(400);
+            res.json(e);
+        }) 
+        
+    })
+
+      
+})
+
 router.put("/table/update/:tableId", auth.verifyTable, function(req, res) {
     let tdata = req.body
     const tableId = req.params.tableId;
