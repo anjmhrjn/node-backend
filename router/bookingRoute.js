@@ -159,7 +159,18 @@ router.get("/booking/:bid", auth.verifyBooking, function(req, res) {
         },
         {
             $unwind: "$table_detail"
-        }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user_detail"
+            }
+        },
+        {
+            $unwind: "$user_detail"
+        },
     ])
     .then(function(result) {
         res.json(result[0])
@@ -186,7 +197,18 @@ router.get("/my-bookings", auth.verifyCustomer, function(req, res) {
         },
         {
             $unwind: "$table_detail"
-        }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user_detail"
+            }
+        },
+        {
+            $unwind: "$user_detail"
+        },
     ])
     .then(function(result) {
         res.json(result)
@@ -214,7 +236,18 @@ router.get("/filter-booking/:status", auth.verifyCustomer, function(req, res) {
         },
         {
             $unwind: "$table_detail"
-        }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user_detail"
+            }
+        },
+        {
+            $unwind: "$user_detail"
+        },
         
     ])
     .then(function(result) {
@@ -240,6 +273,17 @@ router.get("/business/my-booking", auth.verifyBusiness, function(req, res) {
             $unwind: "$table_detail"
         },
         {
+            $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user_detail"
+            }
+        },
+        {
+            $unwind: "$user_detail"
+        },
+        {
             $match: {"table_detail.tableOf": businessId}
             
         }
@@ -250,6 +294,100 @@ router.get("/business/my-booking", auth.verifyBusiness, function(req, res) {
     .catch(function() {
         res.json({message: "something went wrong"})
     })
+})
+
+router.post("/booking/filter", auth.verifyUser, function(req, res) { 
+    const user_type = req.userInfo.user_type
+    if (user_type === 'Business') {
+        const businessId = mongoose.Types.ObjectId(req.userInfo._id)
+        const status_types = req.body.status_types
+        const date = new Date(req.body.date)
+        booking.aggregate([
+            {
+                $lookup: {
+                    from: "tables",
+                    localField: "table",
+                    foreignField: "_id",
+                    as: "table_detail"
+                }
+            },
+            {
+                $unwind: "$table_detail"
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "user",
+                    foreignField: "_id",
+                    as: "user_detail"
+                }
+            },
+            {
+                $unwind: "$user_detail"
+            },
+            {
+                $match: {
+                    $and: [
+                        {"table_detail.tableOf": businessId},
+                        { $or: [ {booking_status: {$in: status_types}}, {requested_for: date}] },
+                    ]
+                }
+                
+            }
+        ])
+        .then(function(result) {
+            res.json(result)
+        })
+        .catch(function() {
+            res.json({message: "something went wrong"})
+        })
+    } else if (user_type === 'Customer') {
+        const userId = mongoose.Types.ObjectId(req.userInfo._id)
+        const status_types = req.body.status_types
+        const date = req.body.date
+        booking.aggregate([
+            {
+                $lookup: {
+                    from: "tables",
+                    localField: "table",
+                    foreignField: "_id",
+                    as: "table_detail"
+                }
+            },
+            {
+                $unwind: "$table_detail"
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "user",
+                    foreignField: "_id",
+                    as: "user_detail"
+                }
+            },
+            {
+                $unwind: "$user_detail"
+            },
+            {
+                $match: {
+                    $and: [
+                        {user: userId},
+                        { $or: [ {booking_status: {$in: status_types}}, {requested_for: date}] },
+                    ]
+                }
+                
+            }
+        ])
+        .then(function(result) {
+            res.json(result)
+        })
+        .catch(function() {
+            res.json({message: "something went wrong"})
+        })
+    } else {
+        res.json()
+    }
+    
 })
 
 router.put("/booking/update-status/:bid", auth.verifyBusinessBooking, function(req, res) {
