@@ -78,9 +78,26 @@ router.delete("/table/delete/:tableId", auth.verifyTable, function(req, res) {
     })
 })
 
+// get tables of a user
 router.get("/table/user/:id", auth.verifyBusiness, function(req, res) {
     const tableOf = req.params.id;
-    table.find({tableOf: tableOf})
+    table.aggregate([
+        {
+            $match: {tableOf: tableOf}
+        },
+        {
+           $lookup:
+            {
+                from: "user",
+                localField: "tableOf",
+                foreignField: "_id",
+                as: "user_detail"
+            }
+        },
+        {
+            $unwind: "$user_detail"
+        }
+    ])
     .then(function(result) {
         res.json(result)
     })
@@ -90,9 +107,88 @@ router.get("/table/user/:id", auth.verifyBusiness, function(req, res) {
     })
 })
 
+// get single table
 router.get("/table/:id", auth.verifyBusiness, function(req, res) {
     const table_id = req.params.id;
-    table.findOne({_id: table_id})
+    table.aggregate([
+        {
+            $match: {_id: table_id}
+        },
+        {
+           $lookup:
+            {
+                from: "user",
+                localField: "tableOf",
+                foreignField: "_id",
+                as: "user_detail"
+            }
+        },
+        {
+            $unwind: "$user_detail"
+        }
+    ])
+    .then(function(result) {
+        res.json(result[0])
+    })
+    .catch(function() {
+        res.status(400)
+        res.json({message: "something went wrong"})
+    })
+})
+
+// get available tables
+router.get("/available/tables", function(req, res){
+    table.aggregate([
+        {
+            $match: {isAvailable: true}
+        },
+        {
+           $lookup:
+            {
+                from: "user",
+                localField: "tableOf",
+                foreignField: "_id",
+                as: "user_detail"
+            }
+        },
+        {
+            $unwind: "$user_detail"
+        }
+    ])
+    .then(function(result) {
+        res.json(result)
+    })
+    .catch(function() {
+        res.status(400)
+        res.json({message: "something went wrong"})
+    })
+})
+
+// get users available tables
+router.get("/user/:id/available/tables", function(req, res){
+    const tableOf = req.params.id
+    table.aggregate([
+        {
+            $match: {
+                $and: [
+                    {tableOf: tableOf},
+                    {isAvailable: true},
+                ]
+            }
+        },
+        {
+           $lookup:
+            {
+                from: "user",
+                localField: "tableOf",
+                foreignField: "_id",
+                as: "user_detail"
+            }
+        },
+        {
+            $unwind: "$user_detail"
+        }
+    ])
     .then(function(result) {
         res.json(result)
     })
