@@ -94,4 +94,24 @@ router.put("/profile/update/:username", auth.verifyProfile, upload.single('user_
     })
 })
 
+router.get("/all-users", auth.verifyAdmin, function(req, res) {
+    user.find({})
+    .then(function(result) {
+        res.json(result)
+    }).catch(function() {
+        res.status(400)
+        res.json({message: "Something went wrong"})
+    })
+})
+
+router.get("/all-business", auth.verifyUser, function(req, res) {
+    user.find({user_type: "Business"})
+    .then(function(result) {
+        res.json(result)
+    }).catch(function() {
+        res.status(400)
+        res.json({message: "Something went wrong"})
+    })
+})
+
 module.exports = router;
