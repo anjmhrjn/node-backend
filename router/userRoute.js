@@ -114,4 +114,15 @@ router.get("/all-business", auth.verifyUser, function(req, res) {
     })
 })
 
+router.get("/user-profile/:id", auth.verifyUser, function(req, res) {
+    const user_id = req.params.id
+    user.findOne({_id: user_id})
+    .then(function(result) {
+        res.json(result)
+    }).catch(function() {
+        res.status(400)
+        res.json({message: "Something went wrong"})
+    })
+})
+
 module.exports = router;
