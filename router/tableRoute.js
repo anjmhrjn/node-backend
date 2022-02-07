@@ -1,6 +1,7 @@
 const express = require('express');
 const router = new express.Router();
 const table = require("../models/tableModel");
+const mongoose = require('mongoose');
 
 const auth = require("../auth/auth");
 
@@ -80,15 +81,11 @@ router.delete("/table/delete/:tableId", auth.verifyTable, function(req, res) {
 
 // get tables of a user
 router.get("/table/user/:id", auth.verifyBusiness, function(req, res) {
-    const tableOf = req.params.id;
+    const tableOf = mongoose.Types.ObjectId(req.params.id);
     table.aggregate([
         {
-            $match: {tableOf: tableOf}
-        },
-        {
-           $lookup:
-            {
-                from: "user",
+            $lookup: {
+                from: "users",
                 localField: "tableOf",
                 foreignField: "_id",
                 as: "user_detail"
@@ -96,6 +93,12 @@ router.get("/table/user/:id", auth.verifyBusiness, function(req, res) {
         },
         {
             $unwind: "$user_detail"
+        },
+        {
+            $match: {
+                tableOf: tableOf
+            }
+            
         }
     ])
     .then(function(result) {
@@ -109,7 +112,7 @@ router.get("/table/user/:id", auth.verifyBusiness, function(req, res) {
 
 // get single table
 router.get("/table/:id", auth.verifyBusiness, function(req, res) {
-    const table_id = req.params.id;
+    const table_id = mongoose.Types.ObjectId(req.params.id);
     table.aggregate([
         {
             $match: {_id: table_id}
@@ -117,7 +120,7 @@ router.get("/table/:id", auth.verifyBusiness, function(req, res) {
         {
            $lookup:
             {
-                from: "user",
+                from: "users",
                 localField: "tableOf",
                 foreignField: "_id",
                 as: "user_detail"
@@ -145,7 +148,7 @@ router.get("/available/tables", function(req, res){
         {
            $lookup:
             {
-                from: "user",
+                from: "users",
                 localField: "tableOf",
                 foreignField: "_id",
                 as: "user_detail"
@@ -166,7 +169,7 @@ router.get("/available/tables", function(req, res){
 
 // get users available tables
 router.get("/user/:id/available/tables", function(req, res){
-    const tableOf = req.params.id
+    const tableOf = mongoose.Types.ObjectId(req.params.id);
     table.aggregate([
         {
             $match: {
@@ -179,7 +182,7 @@ router.get("/user/:id/available/tables", function(req, res){
         {
            $lookup:
             {
-                from: "user",
+                from: "users",
                 localField: "tableOf",
                 foreignField: "_id",
                 as: "user_detail"
