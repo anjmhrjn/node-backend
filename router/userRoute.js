@@ -73,7 +73,7 @@ router.post("/user/login", function(req, res) {
     })
 })
 
-router.put("/profile/update/:username", auth.verifyProfile, upload.single('user_image'), function(req, res) {
+router.put("/profile/update/:username", upload.single('user_image'), function(req, res) {
     let udata = req.body;
     if (req.file !== undefined) {
         udata["user_image"] = req.file.filename;
@@ -117,6 +117,21 @@ router.get("/all-business", auth.verifyUser, function(req, res) {
 router.get("/user-profile/:id", auth.verifyUser, function(req, res) {
     const user_id = req.params.id
     user.findOne({_id: user_id})
+    .then(function(result) {
+        res.json(result)
+    }).catch(function() {
+        res.status(400)
+        res.json({message: "Something went wrong"})
+    })
+})
+
+// search restaurant
+router.get("/search-restaurant/:name", auth.verifyUser, function(req, res) {
+    const name = req.params.name
+    user.find({
+        name: { "$regex": name, "$options": "i" }, 
+        user_type: "Business"
+    })
     .then(function(result) {
         res.json(result)
     }).catch(function() {
