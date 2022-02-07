@@ -1,6 +1,7 @@
 const express = require('express');
 const router = new express.Router();
 const table = require("../models/tableModel");
+const user = require("../models/userModel");
 const mongoose = require('mongoose');
 
 const auth = require("../auth/auth");
@@ -170,30 +171,43 @@ router.get("/available/tables", function(req, res){
 // get users available tables
 router.get("/user/:id/available/tables", function(req, res){
     const tableOf = mongoose.Types.ObjectId(req.params.id);
-    table.aggregate([
-        {
-            $match: {
-                $and: [
-                    {tableOf: tableOf},
-                    {isAvailable: true},
-                ]
-            }
-        },
-        {
-           $lookup:
-            {
-                from: "users",
-                localField: "tableOf",
-                foreignField: "_id",
-                as: "user_detail"
-            }
-        },
-        {
-            $unwind: "$user_detail"
-        }
-    ])
+    
+    // user.aggregate([
+    //     {
+    //         $match: {
+    //             $and: [
+    //                 {tableOf: tableOf},
+    //                 {isAvailable: true},
+    //             ]
+    //         }
+    //     },
+    //     {
+    //        $lookup:
+    //         {
+    //             from: "users",
+    //             localField: "tableOf",
+    //             foreignField: "_id",
+    //             as: "user_detail"
+    //         }
+    //     },
+    //     {
+    //         $unwind: "$user_detail"
+    //     }
+    // ])
+    user.findOne({_id: tableOf})
     .then(function(result) {
-        res.json(result)
+        let data = {}
+        table.find({tableOf:tableOf, isAvailable:true})
+        .then(function(tables) {
+            data.tables = tables
+            data.user = result
+            res.json(data)
+        })
+        .catch(function() {
+            res.status(400)
+            res.json({message: "something went wrong"})
+        })
+        
     })
     .catch(function() {
         res.status(400)
