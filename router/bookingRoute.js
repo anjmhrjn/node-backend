@@ -56,7 +56,7 @@ router.post("/book/table", auth.verifyCustomer, function(req, res) {
                     const data = new booking(req.body)
                     data.save()
                     .then(function(result) {
-                        res.json({message: "Booking added successfully!", data: result, success: true});
+                        res.json({message: "Booking Success!", data: result, success: true});
                     })
                     .catch(function(e) {
                         res.json(e);
@@ -77,7 +77,7 @@ router.put("/update/booking/:bid", auth.verifyBooking, function(req, res) {
     const bookingId = req.params.bid
     const requested_start_time = new Date(req.body.start_time)
     const requested_end_time = new Date(req.body.end_time)
-    booking.find({"user": req.body.user, "requested_for": req.body.requested_for})
+    booking.find({"user": mongoose.Types.ObjectId(req.body.user), "requested_for": req.body.requested_for})
     .then(function(result) {
         let has_booking = false
         result.map(user_booking => {

@@ -112,7 +112,7 @@ router.get("/table/user/:id", auth.verifyBusiness, function(req, res) {
 })
 
 // get single table
-router.get("/table/:id", auth.verifyBusiness, function(req, res) {
+router.get("/table/:id", auth.verifyUser, function(req, res) {
     const table_id = mongoose.Types.ObjectId(req.params.id);
     table.aggregate([
         {
@@ -171,29 +171,6 @@ router.get("/available/tables", function(req, res){
 // get users available tables
 router.get("/user/:id/available/tables", function(req, res){
     const tableOf = mongoose.Types.ObjectId(req.params.id);
-    
-    // user.aggregate([
-    //     {
-    //         $match: {
-    //             $and: [
-    //                 {tableOf: tableOf},
-    //                 {isAvailable: true},
-    //             ]
-    //         }
-    //     },
-    //     {
-    //        $lookup:
-    //         {
-    //             from: "users",
-    //             localField: "tableOf",
-    //             foreignField: "_id",
-    //             as: "user_detail"
-    //         }
-    //     },
-    //     {
-    //         $unwind: "$user_detail"
-    //     }
-    // ])
     user.findOne({_id: tableOf})
     .then(function(result) {
         let data = {}

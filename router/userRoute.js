@@ -60,7 +60,8 @@ router.post("/user/login", function(req, res) {
                     username: userData.username,
                     email: userData.email,
                     user_type: userData.user_type,
-                    token: token
+                    token: token,
+                    user_image: userData.user_image
                 }
                 res.json({
                     token: token, 
@@ -73,11 +74,11 @@ router.post("/user/login", function(req, res) {
     })
 })
 
-router.put("/profile/update/:username", upload.single('user_image'), function(req, res) {
+router.put("/profile/update/:username", function(req, res) {
     let udata = req.body;
-    if (req.file !== undefined) {
-        udata["user_image"] = req.file.filename;
-    }
+    // if (req.file !== undefined) {
+    //     udata["user_image"] = req.file.filename;
+    // }
 
     const primary_fields = ["_id", "username", "user_type"]
     primary_fields.forEach(function(value) {
@@ -88,6 +89,22 @@ router.put("/profile/update/:username", upload.single('user_image'), function(re
     user.updateOne({username: username}, udata)
     .then(function() {
         res.json({message: "Profile Updated", success: true});
+    }).catch(function() {
+        res.status(400);
+        res.json({message: "Error in updating profile"});
+    })
+})
+
+router.put("/profile/change-pic/:username", upload.single("profile_pic"), function(req, res) {
+    let data = {}
+    if (req.file !== undefined) {
+        data["user_image"] = req.file.filename;
+    }
+
+    const username = req.params.username
+    user.updateOne({username: username}, data)
+    .then(function() {
+        res.json({message: "Picture Updated", success: true});
     }).catch(function() {
         res.status(400);
         res.json({message: "Error in updating profile"});
