@@ -5,10 +5,12 @@ const item = require("../models/itemModel");
 const auth = require("../auth/auth");
 const upload = require("../uploads/file");
 const mongoose = require("mongoose");
+const user = require('../models/userModel');
 
 
 router.post("/item/add", auth.verifyBusiness, upload.single('images'), function(req, res) {
     const categories = JSON.parse(req.body.categories)
+    console.log(req.body.categories)
     const data = new item({
         name: req.body.name,
         categories: categories,
@@ -19,7 +21,33 @@ router.post("/item/add", auth.verifyBusiness, upload.single('images'), function(
     })
     data.save()
     .then(function(result) {
-        res.json({message: "Item added successfully!", success: true});
+        res.json({message: "Item added successfully!", success: true, data: result});
+    })
+    .catch(function(e) {
+        res.json(e);
+    })
+    
+})
+
+router.post("/mobile/item/add", auth.verifyBusiness, function(req, res) {
+    var cat_data = req.body.categories
+    console.log(cat_data)
+    cat_data = cat_data.replace("[","");
+    cat_data = cat_data.replace("]","");
+    var modified = cat_data.split(",");
+    var categories = []
+    modified.map(cat => categories.push(`${cat.replace(" ", "")}`))
+    console.log(categories)
+    const data = new item({
+        name: req.body.name,
+        categories: categories,
+        price: req.body.price,
+        description: req.body.description,
+        itemOf: req.body.itemOf,
+    })
+    data.save()
+    .then(function(result) {
+        res.json({message: "Item added successfully!", success: true, data: result});
     })
     .catch(function(e) {
         res.json(e);
@@ -84,9 +112,7 @@ router.put("/item/:itemId/remove-image/", auth.verifyItem, function(req, res) {
 })
 
 router.put("/item/:itemId/add-item-image/", auth.verifyItem, upload.single('image'), function(req, res) {
-
     const itemId = req.params.itemId;
-
     item.updateOne({_id: itemId}, {images: req.file.filename})
     .then(function() {
         res.json({message: "Image Replaced", success: true});
@@ -141,26 +167,33 @@ router.get("/all-items/", function(req, res) {
 
 router.get("/users-items/:userId", function(req, res) { 
     const userId = mongoose.Types.ObjectId(req.params.userId)
-    item.aggregate([
-        {
-            $match: {itemOf: userId}
-        },
-        {
-           $lookup:
-            {
-                from: "categories",
-                localField: "categories",
-                foreignField: "_id",
-                as: "category_info"
-            }
-        }
-    ])
+    user.findOne({_id: userId})
     .then(function(result) {
-        res.json(result)
+        let data = {}
+        item.aggregate([
+            {
+                $match: {itemOf: userId}
+            },
+            {
+               $lookup:
+                {
+                    from: "categories",
+                    localField: "categories",
+                    foreignField: "_id",
+                    as: "category_info"
+                }
+            }
+        ])
+        .then(function(items) {
+            data.items = items
+            data.user = result
+            res.json(data)
+        })
+        .catch(function() {
+            res.json({message: "something went wrong"})
+        })
     })
-    .catch(function() {
-        res.json({message: "something went wrong"})
-    })
+    
 })
 
 router.get("/items/:itemId", auth.verifyItem, function(req, res) { 
@@ -192,6 +225,7 @@ router.delete("/item/delete/:itemId", auth.verifyItem, function(req, res) {
 
     item.deleteOne({_id: itemId})
     .then(function() {
+        res.status(204)
         res.json({message: "Item Deleted", success: true});
     }).catch(function() {
         res.status(400);

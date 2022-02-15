@@ -73,6 +73,7 @@ router.delete("/table/delete/:tableId", auth.verifyTable, function(req, res) {
 
     table.deleteOne({_id: tableId})
     .then(function() {
+        res.status(204)
         res.json({message: "Table Deleted", success: true});
     }).catch(function() {
         res.status(400);

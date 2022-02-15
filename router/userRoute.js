@@ -3,9 +3,12 @@ const bcryptjs = require('bcryptjs');
 const router = new express.Router();
 const jwt = require("jsonwebtoken");
 const user = require("../models/userModel");
+const mongoose = require("mongoose")
 
 const auth = require("../auth/auth");
 const upload = require("../uploads/file");
+const booking = require('../models/bookingModel');
+const table = require('../models/tableModel');
 
 router.post("/user/register", function(req, res) {
     const username = req.body.username;
@@ -74,6 +77,31 @@ router.post("/user/login", function(req, res) {
     })
 })
 
+router.put("/change-password", auth.verifyUser, function(req, res) {
+    const username = req.userInfo.username;
+    user.findOne({username: username})
+    .then(function(userData) {
+        const old_password = req.body.oldPassword;
+        bcryptjs.compare(old_password, userData.password, function(e, result) {
+            if (!result) {
+                res.status(400);
+                return res.json({message: "Old Password does not match!"});
+            }
+            const new_password = req.body.newPassword;
+            bcryptjs.hash(new_password, 10, function(e, hashed_value) {
+                user.updateOne({username: username}, {password: hashed_value})
+                .then(function() {
+                    res.status(200).json({message: "Password updated!", success: true});
+                })
+                .catch(function(e) {
+                    res.status(400);
+                    res.json(e);
+                })
+            })
+        })
+    })
+})
+
 router.put("/profile/update/:username", function(req, res) {
     let udata = req.body;
     // if (req.file !== undefined) {
@@ -116,6 +144,40 @@ router.get("/all-users", auth.verifyAdmin, function(req, res) {
     .then(function(result) {
         res.json(result)
     }).catch(function() {
+        res.status(400)
+        res.json({message: "Something went wrong"})
+    })
+})
+
+router.get("/dashboard-data", auth.verifyUser, function(req, res) {
+    user.find({user_type: "Business"})
+    .then(function(result) {
+        var data = {}
+        data["total_restaurants"] = result.length
+
+        if (req.userInfo.user_type == 'Customer') {
+            booking.find({user: req.userInfo._id})
+            .then(function(userBooking) {
+                data["total_booking"] = userBooking.length
+                res.json(data)
+            })
+        } else if (req.userInfo.user_type == 'Business') {
+
+            table.find({tableOf: req.userInfo._id})
+            .then(function(tableData) {
+                
+                data["total_tables"] = tableData.length
+                
+                res.json(data)
+            })
+        } else {
+            table.find({})
+            .then(function(tbd) {
+                data["total_tables"] = tbd.length
+                res.json(data)
+            })
+        }
+    }).catch(function(e) {
         res.status(400)
         res.json({message: "Something went wrong"})
     })

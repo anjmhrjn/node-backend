@@ -135,6 +135,7 @@ router.delete("/booking/delete/:bid", auth.verifyBooking, function(req, res) {
 
     booking.deleteOne({_id: bookingId})
     .then(function() {
+        res.status(204)
         res.json({message: "Booking Deleted", success: true});
     }).catch(function() {
         res.status(400);
@@ -300,7 +301,15 @@ router.post("/booking/filter", auth.verifyUser, function(req, res) {
     const user_type = req.userInfo.user_type
     if (user_type === 'Business') {
         const businessId = mongoose.Types.ObjectId(req.userInfo._id)
-        const status_types = req.body.status_types
+        let status_types = req.body.status_types
+        if (typeof status_types === 'string') {
+            status_types = status_types.replace("[","");
+            status_types = status_types.replace("]","");
+            var modified = status_types.split(",");
+            var status_values = []
+            modified.map(cat => status_values.push(`${cat.replace(" ", "")}`))
+            status_types = status_values
+        }
         const date = new Date(req.body.date)
         booking.aggregate([
             {

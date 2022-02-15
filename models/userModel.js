@@ -51,6 +51,15 @@ const user = mongoose.model("User", {
     user_type: {
         type: String,
         enum: ['Customer', 'Business', 'Admin']
+    },
+    tags: {
+        type: [String]
+    },
+    opening_time: {
+        type: String
+    },
+    closing_time: {
+        type: String
     }
 })
 

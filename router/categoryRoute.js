@@ -32,6 +32,7 @@ router.delete("/category/delete/:id", auth.verifyAdmin, function(req, res) {
     const category_id = req.params.id
     categories.deleteOne({_id: category_id})
     .then(function() {
+        res.status(204)
         res.json({message: "Category Deleted", success: true});
     }).catch(function() {
         res.json({message: "Error in deleting category"});
