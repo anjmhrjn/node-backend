@@ -9,6 +9,7 @@ const auth = require("../auth/auth");
 const upload = require("../uploads/file");
 const booking = require('../models/bookingModel');
 const table = require('../models/tableModel');
+const categories = require('../models/categoryModel');
 
 router.post("/user/register", function(req, res) {
     const username = req.body.username;
@@ -184,9 +185,33 @@ router.get("/dashboard-data", auth.verifyUser, function(req, res) {
 })
 
 router.get("/all-business", auth.verifyUser, function(req, res) {
-    user.find({user_type: "Business"})
+
+    user.aggregate([
+        {
+            $lookup: {
+                from: "tables",
+                localField: "_id",
+                foreignField: "tableOf",
+                as: "tables"
+            }
+        },
+        {
+            $lookup: {
+                from: "items",
+                localField: "_id",
+                foreignField: "itemOf",
+                as: "items"
+            }
+        },
+        {
+            $match: {user_type: "Business"}
+            
+        }
+    ])
     .then(function(result) {
-        res.json(result)
+        categories.populate(result, {path: "items.categories"}, function(err, final_res) {
+            res.json(final_res)
+        })
     }).catch(function() {
         res.status(400)
         res.json({message: "Something went wrong"})
@@ -205,15 +230,40 @@ router.get("/user-profile/:id", auth.verifyUser, function(req, res) {
 })
 
 // search restaurant
-router.get("/search-restaurant/:name", auth.verifyUser, function(req, res) {
+router.get("/search-restaurant/:name",  function(req, res) {
     const name = req.params.name
-    user.find({
-        name: { "$regex": name, "$options": "i" }, 
-        user_type: "Business"
-    })
+    
+    user.aggregate([
+        {
+            $lookup: {
+                from: "tables",
+                localField: "_id",
+                foreignField: "tableOf",
+                as: "tables"
+            }
+        },
+        {
+            $lookup: {
+                from: "items",
+                localField: "_id",
+                foreignField: "itemOf",
+                as: "items"
+            }
+        },
+        {
+            $match: {
+                name: { "$regex": name, "$options": "i" }, 
+                user_type: "Business"
+            }
+            
+        }
+    ])
     .then(function(result) {
-        res.json(result)
-    }).catch(function() {
+        categories.populate(result, {path: "items.categories"}, function(err, final_res) {
+            res.json(final_res)
+        })
+    })
+    .catch(function() {
         res.status(400)
         res.json({message: "Something went wrong"})
     })
