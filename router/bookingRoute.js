@@ -352,7 +352,15 @@ router.post("/booking/filter", auth.verifyUser, function(req, res) {
         })
     } else if (user_type === 'Customer') {
         const userId = mongoose.Types.ObjectId(req.userInfo._id)
-        const status_types = req.body.status_types
+        let status_types = req.body.status_types
+        if (typeof status_types === 'string') {
+            status_types = status_types.replace("[","");
+            status_types = status_types.replace("]","");
+            var modified = status_types.split(",");
+            var status_values = []
+            modified.map(cat => status_values.push(`${cat.replace(" ", "")}`))
+            status_types = status_values
+        }
         const date = req.body.date
         booking.aggregate([
             {
